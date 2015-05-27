@@ -21,7 +21,7 @@ This creates a new subdirectory called `python_tutorial`. Change your command pr
 
 Once the server starts, open a web browser and browse to http://127.0.0.1:8000/. You should see a success message.
 
-![The default Django welcome page.](https://raw.githubusercontent.com/jasonjoh/python-tutorial/master/readme-images/django-welcome.PNG)
+![The default Django welcome page.](https://raw.githubusercontent.com/jasonjoh/python_tutorial/master/readme-images/django-welcome.PNG)
 
 As the success message suggests, let's add an app to our new project. On the command prompt, run the following command.
 
@@ -152,11 +152,11 @@ In Step 2:
 
 Be sure to replace `http://127.0.0.1:8000` with your correct web server address if you are using a different server.
 
-![The Step 2 section of the App Registration Tool.](https://raw.githubusercontent.com/jasonjoh/python-tutorial/master/readme-images/registration-step2.PNG)
+![The Step 2 section of the App Registration Tool.](https://raw.githubusercontent.com/jasonjoh/python_tutorial/master/readme-images/registration-step2.PNG)
 
 In Step 3, select `Read mail`. If you plan on going beyond this tutorial and trying Calendar or Contacts API, go ahead and select additional permissions as well. For the purposes of this tutorial though, only `Read mail` is required.
 
-![The Step 3 section of the App Registration Tool.](https://raw.githubusercontent.com/jasonjoh/python-tutorial/master/readme-images/registration-step3.PNG)
+![The Step 3 section of the App Registration Tool.](https://raw.githubusercontent.com/jasonjoh/python_tutorial/master/readme-images/registration-step3.PNG)
 
 After clicking the **Register App** button, copy your client ID and secret from the tool. Replace the `YOUR CLIENT ID` and `YOUR CLIENT SECRET` placeholders  in the `.\tutorial\authhelper.py` file with these values and save your changes.
 
@@ -431,11 +431,11 @@ Update the `mail` function in `views.py` to use this new template.
 
 Save the changes and sign in to the app. You should now see a simple table of messages in your inbox.
 
-![The finished app displaying the user's inbox.](https://raw.githubusercontent.com/jasonjoh/python-tutorial/master/readme-images/inbox-listing.PNG)
+![The finished app displaying the user's inbox.](https://raw.githubusercontent.com/jasonjoh/python_tutorial/master/readme-images/inbox-listing.PNG)
 
 ## Next Steps ##
 
-Now that you've created a working sample, you may want to learn more about the [capabilities of the Mail API](https://msdn.microsoft.com/office/office365/APi/mail-rest-operations). If your sample isn't working, and you want to compare, you can download the end result of this tutorial from [GitHub](https://github.com/jasonjoh/python-tutorial).
+Now that you've created a working sample, you may want to learn more about the [capabilities of the Mail API](https://msdn.microsoft.com/office/office365/APi/mail-rest-operations). If your sample isn't working, and you want to compare, you can download the end result of this tutorial from [GitHub](https://github.com/jasonjoh/python_tutorial).
 
 ## Copyright ##
 
