@@ -21,7 +21,7 @@ This creates a new subdirectory called `python_tutorial`. Change your command pr
 
 Once the server starts, open a web browser and browse to http://127.0.0.1:8000/. You should see a success message.
 
-![The default Django welcome page.](https://raw.githubusercontent.com/jasonjoh/python_tutorial/master/readme-images/django-welcome.PNG)
+![The default Django welcome page.](https://raw.githubusercontent.com/jasonjoh/python_tutorial/master/readme-images/django_welcome.PNG)
 
 As the success message suggests, let's add an app to our new project. On the command prompt, run the following command.
 
