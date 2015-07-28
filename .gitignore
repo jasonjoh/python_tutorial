@@ -50,3 +50,4 @@ debug.log
 /tutorial/migrations/*
 !/tutorial/migrations/__init__.py
 /python_tutorial/__pycache__/*
+readme.html
