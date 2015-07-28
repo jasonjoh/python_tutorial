@@ -3,25 +3,28 @@ from urllib.parse import quote, urlencode
 import requests
 
 # Client ID and secret
-client_id = 'YOUR CLIENT ID'
-client_secret = 'YOUR CLIENT SECRET'
+client_id = 'YOUR APP ID HERE'
+client_secret = 'YOUR APP PASSWORD HERE'
 
 # Constant strings for OAuth2 flow
 # The OAuth authority
 authority = 'https://login.microsoftonline.com'
 
 # The authorize URL that initiates the OAuth2 client credential flow for admin consent
-authorize_url = '{0}{1}'.format(authority, '/common/oauth2/authorize?{0}')
+authorize_url = '{0}{1}'.format(authority, '/common/oauth2/v2.0/authorize?{0}')
 
 # The token issuing endpoint
-token_url = '{0}{1}'.format(authority, '/common/oauth2/token')
+token_url = '{0}{1}'.format(authority, '/common/oauth2/v2.0/token')
+
+# The scopes required by the app
+scopes = [ 'https://outlook.office.com/mail.read' ]
 
 def get_signin_url(redirect_uri):
   # Build the query parameters for the signin url
   params = { 'client_id': client_id,
              'redirect_uri': redirect_uri,
              'response_type': 'code',
-             'prompt': 'login',
+             'scope': ' '.join(str(i) for i in scopes)
            }
            
   signin_url = authorize_url.format(urlencode(params))
@@ -33,7 +36,7 @@ def get_token_from_code(auth_code, redirect_uri):
   post_data = { 'grant_type': 'authorization_code',
                 'code': auth_code,
                 'redirect_uri': redirect_uri,
-                'resource': 'https://outlook.office365.com',
+                'scope': ' '.join(str(i) for i in scopes),
                 'client_id': client_id,
                 'client_secret': client_secret
               }

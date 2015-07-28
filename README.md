@@ -1,13 +1,13 @@
 # Getting Started with the Outlook Mail API and Python #
 
-The purpose of this guide is to walk through the process of creating a simple Python web app that retrieves messages in Office 365. The source code in this repository is what you should end up with if you follow the steps outlined here.
+The purpose of this guide is to walk through the process of creating a simple Python web app that retrieves messages in Office 365 or Outlook.com. The source code in this repository is what you should end up with if you follow the steps outlined here.
 
 ## Before you begin ##
 
 This guide assumes:
 
 - That you already have [Python](https://www.python.org/) and [Django](https://www.djangoproject.com/) installed and working on your development machine. This sample was created using Python version 3.4.2 and Django 1.7.1.
-- That you have an Office 365 tenant, with access to an account in that tenant.
+- That you have an Office 365 tenant, with access to an account in that tenant **OR** an Outlook.com developer preview account.
 
 ## Create the app ##
 
@@ -19,7 +19,7 @@ This creates a new subdirectory called `python_tutorial`. Change your command pr
 
 	python manage.py runserver
 
-Once the server starts, open a web browser and browse to http://127.0.0.1:8000/. You should see a success message.
+Once the server starts, open a web browser and browse to http://localhost:8000/. You should see a success message.
 
 ![The default Django welcome page.](https://raw.githubusercontent.com/jasonjoh/python_tutorial/master/readme-images/django_welcome.PNG)
 
@@ -82,11 +82,11 @@ If you're familiar with Django development, this isn't anything new for you. If 
 
 The entries in the `.\tutorial\urls.py` file tell Django to send requests to either `/tutorial` or `/tutorial/home` to the `home` view. Finally, the `home` function in `.\tutorial\views.py` returns a simple HTTP response.
 
-If you save all of your changes and navigate to http://127.0.0.1:8000 you should see "Welcome to the tutorial." Now that we've confirmed that the app is working, we're ready to do some real work.
+If you save all of your changes and navigate to http://localhost:8000 you should see "Welcome to the tutorial." Now that we've confirmed that the app is working, we're ready to do some real work.
 
 ## Designing the app ##
 
-Our app will be very simple. When a user visits the site, they will see a link to log in and view their email. Clicking that link will take them to the Azure login page where they can login with their Office 365 account and grant access to our app. Finally, they will be redirected back to our app, which will display a list of the most recent email in the user's inbox.
+Our app will be very simple. When a user visits the site, they will see a link to log in and view their email. Clicking that link will take them to the Azure login page where they can login with their Office 365 or Outlook.com account and grant access to our app. Finally, they will be redirected back to our app, which will display a list of the most recent email in the user's inbox.
 
 Let's begin by replacing the static message with a signon link. To do that, we'll modify the `home` function in `.\tutorial\views.py`. Update the `home` function to match the following.
 
@@ -111,25 +111,28 @@ Now the library is installed and ready to use. Create a new file in the `tutoria
 	from urllib.parse import quote, urlencode
 	
 	# Client ID and secret
-	client_id = 'YOUR CLIENT ID'
-	client_secret = 'YOUR CLIENT SECRET'
+	client_id = 'YOUR APP ID HERE'
+	client_secret = 'YOUR APP PASSWORD HERE'
 	
 	# Constant strings for OAuth2 flow
 	# The OAuth authority
 	authority = 'https://login.microsoftonline.com'
 	
 	# The authorize URL that initiates the OAuth2 client credential flow for admin consent
-	authorize_url = '{0}{1}'.format(authority, '/common/oauth2/authorize?{0}')
+	authorize_url = '{0}{1}'.format(authority, '/common/oauth2/v2.0/authorize?{0}')
 	
 	# The token issuing endpoint
-	token_url = '{0}{1}'.format(authority, '/common/oauth2/token')
+	token_url = '{0}{1}'.format(authority, '/common/oauth2/v2.0/token')
+
+	# The scopes required by the app
+	scopes = [ 'https://outlook.office.com/mail.read' ]
 	
 	def get_signin_url(redirect_uri):
 	  # Build the query parameters for the signin url
 	  params = { 'client_id': client_id,
 	             'redirect_uri': redirect_uri,
 	             'response_type': 'code',
-	             'prompt': 'login',
+	             'scope': ' '.join(str(i) for i in scopes)
 	           }
 	           
 	  signin_url = authorize_url.format(urlencode(params))
@@ -140,25 +143,21 @@ The first thing we do here is define our client ID and secret. The values of `cl
 
 ### Generate a client ID and secret ###
 
-Head over to https://dev.outlook.com/appregistration to quickly get a client ID and secret. Use the following details to register.
+Head over to https://apps.dev.microsoft.com to quickly get a client ID and secret. Using the sign in buttons, sign in with either your Microsoft account (Outlook.com), or your work or school account (Office 365).
 
-In Step 2:
+![The Application Registration Portal Sign In Page](https://raw.githubusercontent.com/jasonjoh/python_tutorial/master/readme-images/sign-in.PNG)
 
-- **App Name:** python-tutorial
-- **App Type:** Server-side Web app
-- **Redirect URI:** http://127.0.0.1:8000
-- **Home Page URL:** http://127.0.0.1:8000
-- **Secret Valid For:** 1 year
+Once you're signed in, click the **Add an app** button. Enter `python-tutorial` for the name and click **Create application**. After the app is created, locate the **Application Secrets** section, and click the **Generate New Password** button. Copy the password now and save it to a safe place. Once you've copied the password, click **Ok**.
 
-Be sure to replace `http://127.0.0.1:8000` with your correct web server address if you are using a different server.
+![The new password dialog.](https://raw.githubusercontent.com/jasonjoh/python_tutorial/master/readme-images/new-password.PNG)
 
-![The Step 2 section of the App Registration Tool.](https://raw.githubusercontent.com/jasonjoh/python_tutorial/master/readme-images/registration-step2.PNG)
+Locate the **Platforms** section, and click **Add Platform**. Choose **Web**, then enter `http://localhost:8000/tutorial/gettoken/` under **Redirect URIs**. Click **Save** to complete the registration. Copy the **Application Id** and save it along with the password you copied earlier. We'll need those values soon.
 
-In Step 3, select `Read mail`. If you plan on going beyond this tutorial and trying Calendar or Contacts API, go ahead and select additional permissions as well. For the purposes of this tutorial though, only `Read mail` is required.
+Here's what the details of your app registration should look like when you are done.
 
-![The Step 3 section of the App Registration Tool.](https://raw.githubusercontent.com/jasonjoh/python_tutorial/master/readme-images/registration-step3.PNG)
+![The completed registration properties.](https://raw.githubusercontent.com/jasonjoh/python_tutorial/master/readme-images/python-tutorial.PNG)
 
-After clicking the **Register App** button, copy your client ID and secret from the tool. Replace the `YOUR CLIENT ID` and `YOUR CLIENT SECRET` placeholders  in the `.\tutorial\authhelper.py` file with these values and save your changes.
+Replace the `YOUR APP ID HERE` and `YOUR APP PASSWORD HERE` placeholders  in the `.\tutorial\authhelper.py` file with the values you generated and save your changes.
 
 ### Back to coding ###
 
@@ -196,11 +195,11 @@ The view doesn't do much now, but we'll change that soon. Add this new view to t
 	  url(r'^gettoken/$', views.gettoken, name='gettoken'),
 	) 
 
-Save your changes and browse to http://127.0.0.1:8000. If you hover over the link, it should look like:
+Save your changes and browse to http://localhost:8000. If you hover over the link, it should look like:
 
-    https://login.microsoftonline.com/common/oauth2/authorize?client_id=<SOME GUID>&response_type=code&redirect_uri=http%3A%2F%2F127.0.0.1%3A8000%2Ftutorial%2Fgettoken%2F&prompt=login
+    https://login.microsoftonline.com/common/oauth2/v2.0/authorize?scope=https%3A%2F%2Foutlook.office.com%2Fmail.read&response_type=code&client_id=<SOME GUID>&redirect_uri=http%3A%2F%2Flocalhost%3A8000%2Ftutorial%2Fgettoken%2F
 
-The `<SOME GUID>` portion should match your client ID. Click on the link and (assuming you are not already signed in to Office 365 in your browser), you should be presented with a sign in page. Sign in with your Office 365 account. Your browser should redirect to back to the `gettoken` view. The view doesn't do anything yet, so let's fix that now.
+The `<SOME GUID>` portion should match your client ID. Click on the link and you should be presented with a sign in page. Sign in with your Office 365 or Outlook.com account. Your browser should redirect to back to the `gettoken` view. The view doesn't do anything yet, so let's fix that now.
 
 ### Exchanging the code for a token ###
 
@@ -227,7 +226,7 @@ Now add another helper function to `authhelper.py` called `get_token_from_code`.
 	  post_data = { 'grant_type': 'authorization_code',
 	                'code': auth_code,
 	                'redirect_uri': redirect_uri,
-	                'resource': 'https://outlook.office365.com',
+	                'scope': ' '.join(str(i) for i in scopes),
 	                'client_id': client_id,
 	                'client_secret': client_secret
 	              }
@@ -255,9 +254,9 @@ Let's make sure that works. Modify the `gettoken` function in `views.py` to use 
 	  request.session['access_token'] = access_token
 	  return HttpResponse('Access token: {0}'.format(access_token))
 
-If you save your changes, restart the server, and go through the sign-in process again, you should now see a long string of seemingly nonsensical characters. If everything's gone according to plan, that should be an access token. Copy the entire value and head over to http://jwt.calebb.net/. If you paste that value in, you should see a JSON representation of an access token. For details and alternative parsers, see [Validating your Office 365 Access Token](https://github.com/jasonjoh/office365-azure-guides/blob/master/ValidatingYourToken.md).
+If you save your changes, restart the server, and go through the sign-in process again, you should now see a long string of seemingly nonsensical characters. If everything's gone according to plan, that should be an access token.
 
-Once you're convinced that the token is what it should be, we're ready to call the Mail API.
+Now we're ready to call the Mail API.
 
 ## Using the Mail API ##
 
@@ -311,6 +310,8 @@ Create a new file in the `tutorial` directory called `outlookservice.py`. We'll 
 
 	import requests
 	import uuid
+
+	outlook_api_endpoint = 'https://outlook.office.com/api/v1.0{0}'
 	
 	# Generic API Sending
 	def make_api_call(method, url, token, payload = None, parameters = None):

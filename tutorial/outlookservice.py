@@ -2,6 +2,8 @@
 import requests
 import uuid
 
+outlook_api_endpoint = 'https://outlook.office.com/api/v1.0{0}'
+
 # Generic API Sending
 def make_api_call(method, url, token, payload = None, parameters = None):
     # Send these headers with all API calls
@@ -32,8 +34,6 @@ def make_api_call(method, url, token, payload = None, parameters = None):
         response = requests.post(url, headers = headers, data = payload, params = parameters)
         
     return response
-    
-outlook_api_endpoint = 'https://outlook.office365.com/api/v1.0{0}'
     
 def get_my_messages(access_token):
   get_messages_url = outlook_api_endpoint.format('/Me/Messages')
