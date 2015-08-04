@@ -125,7 +125,8 @@ Now the library is installed and ready to use. Create a new file in the `tutoria
 	token_url = '{0}{1}'.format(authority, '/common/oauth2/v2.0/token')
 
 	# The scopes required by the app
-	scopes = [ 'https://outlook.office.com/mail.read' ]
+	scopes = [ 'openid',
+               'https://outlook.office.com/mail.read' ]
 	
 	def get_signin_url(redirect_uri):
 	  # Build the query parameters for the signin url
@@ -197,7 +198,7 @@ The view doesn't do much now, but we'll change that soon. Add this new view to t
 
 Save your changes and browse to http://localhost:8000. If you hover over the link, it should look like:
 
-    https://login.microsoftonline.com/common/oauth2/v2.0/authorize?scope=https%3A%2F%2Foutlook.office.com%2Fmail.read&response_type=code&client_id=<SOME GUID>&redirect_uri=http%3A%2F%2Flocalhost%3A8000%2Ftutorial%2Fgettoken%2F
+    https://login.microsoftonline.com/common/oauth2/v2.0/authorize?scope=openid+https%3A%2F%2Foutlook.office.com%2Fmail.read&response_type=code&client_id=<SOME GUID>&redirect_uri=http%3A%2F%2Flocalhost%3A8000%2Ftutorial%2Fgettoken%2F
 
 The `<SOME GUID>` portion should match your client ID. Click on the link and you should be presented with a sign in page. Sign in with your Office 365 or Outlook.com account. Your browser should redirect to back to the `gettoken` view. The view doesn't do anything yet, so let's fix that now.
 
@@ -234,12 +235,43 @@ Now add another helper function to `authhelper.py` called `get_token_from_code`.
 	  r = requests.post(token_url, data = post_data)
 	  
 	  try:
-	    access_token = r.json()['access_token']
-	    return access_token
+	    return r.json()
 	  except:
 	    return 'Error retrieving token: {0} - {1}'.format(r.status_code, r.text)
 
-Let's make sure that works. Modify the `gettoken` function in `views.py` to use this helper function and display the return value.
+### Getting the user's email address ###
+
+The JSON array returned from `get_token_from_code` doesn't just include the access token. It also includes an ID token. We can use this token to find out a few pieces of information about the logged on user. In this case, we want to get the user's email address. You'll see why we want this soon.
+
+Add a new function `get_user_email_from_id_token` to `authhelper.py`.
+
+#### `get_user_email_from_id_token` in the `.\tutorial\authhelper.py` file ####
+	import base64
+	import json
+
+	def get_user_email_from_id_token(id_token):
+	  # JWT is in three parts, header, token, and signature
+	  # separated by '.'
+	  token_parts = id_token.split('.')
+	  encoded_token = token_parts[1]
+	  
+	  # base64 strings should have a length divisible by 4
+	  # If this one doesn't, add the '=' padding to fix it
+	  leftovers = len(encoded_token) % 4
+	  if leftovers == 2:
+	      encoded_token += '=='
+	  elif leftovers == 3:
+	      encoded_token += '='
+	  
+	  # URL-safe base64 decode the token parts
+	  decoded = base64.urlsafe_b64decode(encoded_token).decode('utf-8')
+	  
+	  # Load decoded token into a JSON object
+	  jwt = json.loads(decoded)
+	  
+	  return jwt['preferred_username']
+
+Let's make sure that works. Modify the `gettoken` function in `views.py` to use these helper functions and display the return values.
 
 #### Updated `gettoken` function in `.\tutorial\views.py` ####
 
@@ -249,10 +281,14 @@ Let's make sure that works. Modify the `gettoken` function in `views.py` to use 
 	def gettoken(request):
 	  auth_code = request.GET['code']
 	  redirect_uri = request.build_absolute_uri(reverse('tutorial:gettoken'))
-	  access_token = get_token_from_code(auth_code, redirect_uri)
+	  token = get_token_from_code(auth_code, redirect_uri)
+	  access_token = token['access_token']
+	  user_email = get_user_email_from_id_token(token['id_token'])
+	
 	  # Save the token in the session
 	  request.session['access_token'] = access_token
-	  return HttpResponse('Access token: {0}'.format(access_token))
+	  request.session['user_email'] = user_email
+	  return HttpResponse('User Email: {0}, Access token: {1}'.format(user_email, access_token))
 
 If you save your changes, restart the server, and go through the sign-in process again, you should now see a long string of seemingly nonsensical characters. If everything's gone according to plan, that should be an access token.
 
@@ -266,6 +302,7 @@ Now that we can get an access token, we're in a good position to do something wi
 
 	def mail(request):
 	  access_token = request.session['access_token']
+	  user_email = request.session['user_email']
 	  # If there is no token in the session, redirect to home
 	  if not access_token:
 	    return HttpResponseRedirect(reverse('tutorial:home'))
@@ -297,9 +334,13 @@ Update the `gettoken` function to redirect to the `mail` view after saving the t
 	def gettoken(request):
 	  auth_code = request.GET['code']
 	  redirect_uri = request.build_absolute_uri(reverse('tutorial:gettoken'))
-	  access_token = get_token_from_code(auth_code, redirect_uri)
+	  token = get_token_from_code(auth_code, redirect_uri)
+	  access_token = token['access_token']
+	  user_email = get_user_email_from_id_token(token['id_token'])
+
 	  # Save the token in the session
 	  request.session['access_token'] = access_token
+	  request.session['user_email'] = user_email
 	  return HttpResponseRedirect(reverse('tutorial:mail'))
 
 For now all this does is read the token back from the cookie and display it. Save your changes, restart the server, and go through the signon process again. You should see the token displayed. Now that we know we have access to the token in the `mail` function, we're ready to call the Mail API.
@@ -314,11 +355,12 @@ Create a new file in the `tutorial` directory called `outlookservice.py`. We'll 
 	outlook_api_endpoint = 'https://outlook.office.com/api/v1.0{0}'
 	
 	# Generic API Sending
-	def make_api_call(method, url, token, payload = None, parameters = None):
+	def make_api_call(method, url, token, user_email, payload = None, parameters = None):
 	    # Send these headers with all API calls
 	    headers = { 'User-Agent' : 'python_tutorial/1.0',
 	                'Authorization' : 'Bearer {0}'.format(token),
-	                'Accept' : 'application/json' }
+	                'Accept' : 'application/json',
+                	'X-AnchorMailbox' : user_email }
 	                
 	    # Use these headers to instrument calls. Makes it easier
 	    # to correlate requests and responses in case of problems
@@ -346,11 +388,13 @@ Create a new file in the `tutorial` directory called `outlookservice.py`. We'll 
 
 This function uses the `requests` library to send API requests. It sets a standard set of headers on each requests, including client instrumentation.
 
+It also uses the email address we retrieved from the ID token to set the `X-AnchorMailbox` header. By setting this header, we enable the API endpoint to route API calls to the correct backend mailbox server more efficiently.
+
 Now let's add a function that will use this function to implement a request to retrieve messages from the inbox. Create a new function in `outlookservice.py` called `get_my_messages`.
 
 #### The `get_my_messages` function in `./tutorial/outlookservice.py` ####
 
-	def get_my_messages(access_token):
+	def get_my_messages(access_token, user_email):
 	  get_messages_url = outlook_api_endpoint.format('/Me/Messages')
 	  
 	  # Use OData query parameters to control the results
@@ -361,7 +405,7 @@ Now let's add a function that will use this function to implement a request to r
 	                      '$select': 'DateTimeReceived,Subject,From',
 	                      '$orderby': 'DateTimeReceived DESC'}
 	                      
-	  r = make_api_call('GET', get_messages_url, token, parameters = query_parameters)
+	  r = make_api_call('GET', get_messages_url, token, user_email, parameters = query_parameters)
 	  
 	  if (r.status_code == requests.codes.ok):
 	    return r.json()
@@ -378,11 +422,12 @@ Then update the `mail` function to call the new function.
 
 	def mail(request):
 	  access_token = request.session['access_token']
+	  user_email = request.session['user_email']
 	  # If there is no token in the session, redirect to home
 	  if not access_token:
 	    return HttpResponseRedirect(reverse('tutorial:home'))
 	  else:
-	    messages = get_my_messages(access_token)
+	    messages = get_my_messages(access_token, user_email)
 	    return HttpResponse('Messages: {0}'.format(messages))
 
 If you save the changes and sign into the app, you should now see a raw listing of the JSON response. 
@@ -422,11 +467,12 @@ Update the `mail` function in `views.py` to use this new template.
 
 	def mail(request):
 	  access_token = request.session['access_token']
+	  user_email = request.session['user_email']
 	  # If there is no token in the session, redirect to home
 	  if not access_token:
 	    return HttpResponseRedirect(reverse('tutorial:home'))
 	  else:
-	    messages = get_my_messages(access_token)
+	    messages = get_my_messages(access_token, user_email)
 	    context = { 'messages': messages['value'] }
 	    return render(request, 'tutorial/mail.html', context)
 

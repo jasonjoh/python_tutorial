@@ -5,11 +5,12 @@ import uuid
 outlook_api_endpoint = 'https://outlook.office.com/api/v1.0{0}'
 
 # Generic API Sending
-def make_api_call(method, url, token, payload = None, parameters = None):
+def make_api_call(method, url, token, user_email, payload = None, parameters = None):
     # Send these headers with all API calls
     headers = { 'User-Agent' : 'python_tutorial/1.0',
                 'Authorization' : 'Bearer {0}'.format(token),
-                'Accept' : 'application/json' }
+                'Accept' : 'application/json',
+                'X-AnchorMailbox' : user_email }
                 
     # Use these headers to instrument calls. Makes it easier
     # to correlate requests and responses in case of problems
@@ -35,7 +36,7 @@ def make_api_call(method, url, token, payload = None, parameters = None):
         
     return response
     
-def get_my_messages(access_token):
+def get_my_messages(access_token, user_email):
   get_messages_url = outlook_api_endpoint.format('/Me/Messages')
   
   # Use OData query parameters to control the results
@@ -46,7 +47,7 @@ def get_my_messages(access_token):
                       '$select': 'DateTimeReceived,Subject,From',
                       '$orderby': 'DateTimeReceived DESC'}
                       
-  r = make_api_call('GET', get_messages_url, access_token, parameters = query_parameters)
+  r = make_api_call('GET', get_messages_url, access_token, user_email, parameters = query_parameters)
   
   if (r.status_code == requests.codes.ok):
     return r.json()
