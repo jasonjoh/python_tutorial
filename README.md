@@ -10,14 +10,16 @@ This guide assumes:
 - That you have an Office 365 tenant, with access to an account in that tenant.
 
 ## Run the app ##
-If you've downloaded this sample from http://dev.office.com/getting-started/office365apis,  do the follow to run the app:
+
+If you've downloaded this sample from http://dev.office.com/getting-started/office365apis, and you signed in and registered the app, you're all set! The download already includes the client ID and secret. Do the follow to run the app:
+
  1. Install the [Requests: HTTP for Humans library](http://www.python-requests.org/en/latest/) by running `pip install requests`.
  2. Run `python manage.py migrate` to initialize the database for the app.
  3. Then run `python manage.py runserver` to start your server.
 
 Then open your browser to the specified port (i.e. http://localhost:8000).  
 
-Note: If you did not sign in, you will need to update your auth creds in the sample, prior to running it.
+If you downloaded without signing in, or you downloaded directly from GitHub, then you'll need to follow the steps in **Implementing OAuth2** to register your app and get a client ID and secret.
 
 ## Or, create the app ##
 
