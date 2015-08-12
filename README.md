@@ -9,7 +9,17 @@ This guide assumes:
 - That you already have [Python](https://www.python.org/) and [Django](https://www.djangoproject.com/) installed and working on your development machine. This sample was created using Python version 3.4.2 and Django 1.7.1.
 - That you have an Office 365 tenant, with access to an account in that tenant.
 
-## Create the app ##
+## Run the app ##
+If you've downloaded this sample from http://dev.office.com/getting-started/office365apis,  do the follow to run the app:
+ 1. Install the [Requests: HTTP for Humans library](http://www.python-requests.org/en/latest/) by running `pip install requests`.
+ 2. Run `python manage.py migrate` to initialize the database for the app.
+ 3. Then run `python manage.py runserver` to start your server.
+
+Then open your browser to the specified port (i.e. http://localhost:8000).  
+
+Note: If you did not sign in, you will need to update your auth creds in the sample, prior to running it.
+
+## Or, create the app ##
 
 Let's dive right in! Open a command prompt and set the current directory to a location where you want to store your code. Run the following command to create a new Django project.
 
