@@ -66,7 +66,9 @@ def get_user_email_from_id_token(id_token):
       encoded_token += '='
   
   # URL-safe base64 decode the token parts
-  decoded = base64.urlsafe_b64decode(encoded_token).decode('utf-8')
+  # NOTE: Per issue #2, added additional encode('utf-8') call on
+  # encoded_token so this call will work in Python 2.*
+  decoded = base64.urlsafe_b64decode(encoded_token.encode('utf-8')).decode('utf-8')
   
   # Load decoded token into a JSON object
   jwt = json.loads(decoded)
