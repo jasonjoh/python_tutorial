@@ -351,6 +351,7 @@ Create a new file in the `tutorial` directory called `outlookservice.py`. We'll 
 
 	import requests
 	import uuid
+  import json
 
 	outlook_api_endpoint = 'https://outlook.office.com/api/v1.0{0}'
 	
@@ -379,10 +380,10 @@ Create a new file in the `tutorial` directory called `outlookservice.py`. We'll 
 	        response = requests.delete(url, headers = headers, params = parameters)
 	    elif (method.upper() == 'PATCH'):
 	        headers.update({ 'Content-Type' : 'application/json' })
-	        response = requests.patch(url, headers = headers, data = payload, params = parameters)
+	        response = requests.patch(url, headers = headers, data = json.dumps(payload), params = parameters)
 	    elif (method.upper() == 'POST'):
 	        headers.update({ 'Content-Type' : 'application/json' })
-	        response = requests.post(url, headers = headers, data = payload, params = parameters)
+	        response = requests.post(url, headers = headers, data = json.dumps(payload), params = parameters)
 	        
 	    return response
 
