@@ -35,7 +35,7 @@ def make_api_call(method, url, token, user_email, payload = None, parameters = N
         response = requests.patch(url, headers = headers, data = json.dumps(payload), params = parameters)
     elif (method.upper() == 'POST'):
         headers.update({ 'Content-Type' : 'application/json' })
-        response = requests.post(url, headers = headers, data = json.dumps(payload), params = parameters, verify = False)
+        response = requests.post(url, headers = headers, data = json.dumps(payload), params = parameters)
         
     return response
     
