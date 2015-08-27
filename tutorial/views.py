@@ -3,7 +3,8 @@ from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 from django.core.urlresolvers import reverse
 from tutorial.authhelper import get_signin_url, get_token_from_code, get_user_email_from_id_token
-from tutorial.outlookservice import get_my_messages
+from tutorial.outlookservice import get_my_messages, send_message_with_attachment
+from python_tutorial.settings import BASE_DIR
 
 # Create your views here.
 
@@ -34,6 +35,21 @@ def mail(request):
     messages = get_my_messages(access_token, user_email)
     context = { 'messages': messages['value'] }
     return render(request, 'tutorial/mail.html', context)
+    
+def sendmail(request):
+  access_token = request.session['access_token']
+  user_email = request.session['user_email']
+  
+  #attachment_file = BASE_DIR + '\\attachments\\text_attachment.txt'
+  attachment_file = BASE_DIR + '\\attachments\\jpeg_attachment.jpg'
+  
+  # If there is no token in the session, redirect to home
+  if not access_token:
+    return HttpResponseRedirect(reverse('tutorial:home'))
+  else:
+    result = send_message_with_attachment(access_token, user_email, attachment_file)
+    return HttpResponse('<p>Mail sent with ' + attachment_file + ' attached: ' + result)
+    
     
 # MIT License: 
  

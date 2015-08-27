@@ -11,6 +11,8 @@ urlpatterns = patterns('',
   url(r'^gettoken/$', views.gettoken, name='gettoken'),
   # Mail view ('/tutorial/mail/')
   url(r'^mail/$', views.mail, name='mail'),
+  # Sendmail View ('tutorial/sendmail/')
+  url(r'^sendmail/$', views.sendmail, name='sendmail'),
 ) 
 
 # MIT License: 

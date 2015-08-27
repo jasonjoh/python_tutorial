@@ -1,6 +1,9 @@
 # Copyright (c) Microsoft. All rights reserved. Licensed under the MIT license. See full license at the bottom of this file.
 import requests
 import uuid
+import base64
+import json
+import os
 
 outlook_api_endpoint = 'https://outlook.office.com/api/v1.0{0}'
 
@@ -29,10 +32,10 @@ def make_api_call(method, url, token, user_email, payload = None, parameters = N
         response = requests.delete(url, headers = headers, params = parameters)
     elif (method.upper() == 'PATCH'):
         headers.update({ 'Content-Type' : 'application/json' })
-        response = requests.patch(url, headers = headers, data = payload, params = parameters)
+        response = requests.patch(url, headers = headers, data = json.dumps(payload), params = parameters)
     elif (method.upper() == 'POST'):
         headers.update({ 'Content-Type' : 'application/json' })
-        response = requests.post(url, headers = headers, data = payload, params = parameters)
+        response = requests.post(url, headers = headers, data = json.dumps(payload), params = parameters, verify = False)
         
     return response
     
@@ -53,6 +56,58 @@ def get_my_messages(access_token, user_email):
     return r.json()
   else:
     return "{0}: {1}".format(r.status_code, r.text)
+    
+def send_message_with_attachment(access_token, user_email, file_path):
+  # Simplistic scenario of sending a file to self to demonstrate
+  # how to send an email with an send_message_with_attachment
+  
+  # First let's deal with the attachment. We need it in base64 format
+  # to include in the payload to the API call.
+  # Open the file in binary mode
+  attachment_file = open(file_path, 'rb')
+  
+  # Read the contents, which will just be the bytes
+  raw_attachment_contents = attachment_file.read()
+  
+  # Base64-encode the data. This returns a bytes object, and we need a 
+  # string, so call decode('utf-8') to get a string representation.
+  encoded_attachment_contents = base64.b64encode(raw_attachment_contents).decode('utf-8')
+  
+  # Set up the sendmail URL
+  send_message_url = outlook_api_endpoint.format('/Me/SendMail')
+  
+  # Create the message payload
+  message_payload = {
+    "Message": {
+      "Subject": "Send mail with attachment from API",
+      "Body": {
+        "ContentType": "HTML",
+        "Content": "This was sent using the <strong>Outlook Mail API</strong>."
+      },
+      "ToRecipients": [
+        {
+          "EmailAddress": {
+            "Address": user_email
+          }
+        }
+      ],
+      "Attachments": [
+        {
+          "@odata.type": "#Microsoft.OutlookServices.FileAttachment",
+          "Name": os.path.basename(attachment_file.name),
+          "ContentBytes": encoded_attachment_contents
+        }
+      ]
+    },
+    "SaveToSentItems": "true"
+  }
+  
+  response = make_api_call('POST', send_message_url, access_token, user_email, message_payload)
+  
+  if (response.status_code == requests.codes.accepted):
+    return "SUCCESS"
+  else:
+    return "FAILURE"
 
 # MIT License: 
  
