@@ -47,7 +47,7 @@ Save your changes. From the command line, run the following command to initializ
 
 	python manage.py migrate
 
-Let's add a bit of code to the app just to make sure that it is working. Open the `.\tutorial\views.py` file and add the following function.
+Let's add a bit of code to the app just to make sure that it is working. Open the `.\tutorial\views.py` file and add the following code.
 
 ### `home` function in the `.\tutorial\views.py` file ###
 
@@ -276,7 +276,7 @@ Let's make sure that works. Modify the `gettoken` function in `views.py` to use 
 #### Updated `gettoken` function in `.\tutorial\views.py` ####
 
 	# Update import statement to include new function
-	from tutorial.authhelper import get_signin_url, get_token_from_code
+	from tutorial.authhelper import get_signin_url, get_token_from_code, get_user_email_from_id_token
 
 	def gettoken(request):
 	  auth_code = request.GET['code']
@@ -405,7 +405,7 @@ Now let's add a function that will use this function to implement a request to r
 	                      '$select': 'DateTimeReceived,Subject,From',
 	                      '$orderby': 'DateTimeReceived DESC'}
 	                      
-	  r = make_api_call('GET', get_messages_url, token, user_email, parameters = query_parameters)
+	  r = make_api_call('GET', get_messages_url, access_token, user_email, parameters = query_parameters)
 	  
 	  if (r.status_code == requests.codes.ok):
 	    return r.json()
