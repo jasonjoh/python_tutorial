@@ -3,7 +3,7 @@ import requests
 import uuid
 import json
 
-outlook_api_endpoint = 'https://outlook.office.com/api/v1.0{0}'
+outlook_api_endpoint = 'https://outlook.office.com/api/v2.0{0}'
 
 # Generic API Sending
 def make_api_call(method, url, token, user_email, payload = None, parameters = None):
@@ -42,11 +42,11 @@ def get_my_messages(access_token, user_email):
   
   # Use OData query parameters to control the results
   #  - Only first 10 results returned
-  #  - Only return the DateTimeReceived, Subject, and From fields
-  #  - Sort the results by the DateTimeReceived field in descending order
+  #  - Only return the ReceivedDateTime, Subject, and From fields
+  #  - Sort the results by the ReceivedDateTime field in descending order
   query_parameters = {'$top': '10',
-                      '$select': 'DateTimeReceived,Subject,From',
-                      '$orderby': 'DateTimeReceived DESC'}
+                      '$select': 'ReceivedDateTime,Subject,From',
+                      '$orderby': 'ReceivedDateTime DESC'}
                       
   r = make_api_call('GET', get_messages_url, access_token, user_email, parameters = query_parameters)
   

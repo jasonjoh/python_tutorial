@@ -353,7 +353,7 @@ Create a new file in the `tutorial` directory called `outlookservice.py`. We'll 
 	import uuid
   import json
 
-	outlook_api_endpoint = 'https://outlook.office.com/api/v1.0{0}'
+	outlook_api_endpoint = 'https://outlook.office.com/api/v2.0{0}'
 	
 	# Generic API Sending
 	def make_api_call(method, url, token, user_email, payload = None, parameters = None):
@@ -400,11 +400,11 @@ Now let's add a function that will use this function to implement a request to r
 	  
 	  # Use OData query parameters to control the results
 	  #  - Only first 10 results returned
-	  #  - Only return the DateTimeReceived, Subject, and From fields
-	  #  - Sort the results by the DateTimeReceived field in descending order
+	  #  - Only return the ReceivedDateTime, Subject, and From fields
+	  #  - Sort the results by the ReceivedDateTime field in descending order
 	  query_parameters = {'$top': '10',
-	                      '$select': 'DateTimeReceived,Subject,From',
-	                      '$orderby': 'DateTimeReceived DESC'}
+	                      '$select': 'ReceivedDateTime,Subject,From',
+	                      '$orderby': 'ReceivedDateTime DESC'}
 	                      
 	  r = make_api_call('GET', get_messages_url, access_token, user_email, parameters = query_parameters)
 	  
@@ -455,7 +455,7 @@ Start by creating a new subdirectory in the `tutorial` directory called `templat
 	        <tr>
 	          <td>{{ message.From.EmailAddress.Name }}</td>
 	          <td>{{ message.Subject }}</td>
-	          <td>{{ message.DateTimeReceived }}</td>
+	          <td>{{ message.ReceivedDateTime }}</td>
 	        </tr>
 	      {% endfor %}
 	    </table>
