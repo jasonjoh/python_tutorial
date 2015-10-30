@@ -3,7 +3,7 @@ from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 from django.core.urlresolvers import reverse
 from tutorial.authhelper import get_signin_url, get_token_from_code, get_user_email_from_id_token
-from tutorial.outlookservice import get_my_messages
+from tutorial.outlookservice import get_my_messages, get_my_events, get_my_contacts
 
 # Create your views here.
 
@@ -34,6 +34,28 @@ def mail(request):
     messages = get_my_messages(access_token, user_email)
     context = { 'messages': messages['value'] }
     return render(request, 'tutorial/mail.html', context)
+    
+def events(request):
+  access_token = request.session['access_token']
+  user_email = request.session['user_email']
+  # If there is no token in the session, redirect to home
+  if not access_token:
+    return HttpResponseRedirect(reverse('tutorial:home'))
+  else:
+    events = get_my_events(access_token, user_email)
+    context = { 'events': events['value'] }
+    return render(request, 'tutorial/events.html', context)
+    
+def contacts(request):
+  access_token = request.session['access_token']
+  user_email = request.session['user_email']
+  # If there is no token in the session, redirect to home
+  if not access_token:
+    return HttpResponseRedirect(reverse('tutorial:home'))
+  else:
+    contacts = get_my_contacts(access_token, user_email)
+    context = { 'contacts': contacts['value'] }
+    return render(request, 'tutorial/contacts.html', context)
     
 # MIT License: 
  

@@ -1,0 +1,20 @@
+<html>
+  <body>
+    <h1>Your Events</h1>
+    <table width="100%" border="1">
+      <tr>
+        <th>Subject</th>
+        <th>Start</th>
+        <th>End</th>
+      </tr>
+      
+      {% for event in events %}
+        <tr>
+          <td>{{ event.Subject }}</td>
+          <td>{{ event.Start }}</td>
+          <td>{{ event.End }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+  </body>
+</html>
