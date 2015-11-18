@@ -54,6 +54,42 @@ def get_my_messages(access_token, user_email):
     return r.json()
   else:
     return "{0}: {1}".format(r.status_code, r.text)
+    
+def get_my_events(access_token, user_email):
+  get_events_url = outlook_api_endpoint.format('/Me/Events')
+  
+  # Use OData query parameters to control the results
+  #  - Only first 10 results returned
+  #  - Only return the Subject, Start, and End fields
+  #  - Sort the results by the Start field in ascending order
+  query_parameters = {'$top': '10',
+                      '$select': 'Subject,Start,End',
+                      '$orderby': 'Start ASC'}
+                      
+  r = make_api_call('GET', get_events_url, access_token, user_email, parameters = query_parameters)
+  
+  if (r.status_code == requests.codes.ok):
+    return r.json()
+  else:
+    return "{0}: {1}".format(r.status_code, r.text)
+    
+def get_my_contacts(access_token, user_email):
+  get_contacts_url = outlook_api_endpoint.format('/Me/Contacts')
+  
+  # Use OData query parameters to control the results
+  #  - Only first 10 results returned
+  #  - Only return the GivenName, Surname, and EmailAddresses fields
+  #  - Sort the results by the GivenName field in ascending order
+  query_parameters = {'$top': '10',
+                      '$select': 'GivenName,Surname,EmailAddresses',
+                      '$orderby': 'GivenName ASC'}
+                      
+  r = make_api_call('GET', get_contacts_url, access_token, user_email, parameters = query_parameters)
+  
+  if (r.status_code == requests.codes.ok):
+    return r.json()
+  else:
+    return "{0}: {1}".format(r.status_code, r.text)
 
 # MIT License: 
  
