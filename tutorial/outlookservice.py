@@ -64,7 +64,7 @@ def get_my_events(access_token, user_email):
   #  - Sort the results by the Start field in ascending order
   query_parameters = {'$top': '10',
                       '$select': 'Subject,Start,End',
-                      '$orderby': 'Start ASC'}
+                      '$orderby': 'Start/DateTime ASC'}
                       
   r = make_api_call('GET', get_events_url, access_token, user_email, parameters = query_parameters)
   
