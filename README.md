@@ -126,7 +126,8 @@ Now the library is installed and ready to use. Create a new file in the `tutoria
 
 	# The scopes required by the app
 	scopes = [ 'openid',
-               'https://outlook.office.com/mail.read' ]
+             'profile',
+             'https://outlook.office.com/mail.read' ]
 	
 	def get_signin_url(redirect_uri):
 	  # Build the query parameters for the signin url
