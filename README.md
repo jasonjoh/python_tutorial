@@ -155,15 +155,14 @@ token_url = '{0}{1}'.format(authority, '/common/oauth2/v2.0/token')
 
 # The scopes required by the app
 scopes = [ 'openid',
-            'profile',
-            'https://outlook.office.com/mail.read' ]
+           'https://outlook.office.com/mail.read' ]
 
 def get_signin_url(redirect_uri):
   # Build the query parameters for the signin url
   params = { 'client_id': client_id,
-              'redirect_uri': redirect_uri,
-              'response_type': 'code',
-              'scope': ' '.join(str(i) for i in scopes)
+             'redirect_uri': redirect_uri,
+             'response_type': 'code',
+             'scope': ' '.join(str(i) for i in scopes)
             }
             
   signin_url = authorize_url.format(urlencode(params))
@@ -283,37 +282,74 @@ def get_token_from_code(auth_code, redirect_uri):
 
 ### Getting the user's email address ###
 
-The JSON array returned from `get_token_from_code` doesn't just include the access token. It also includes an ID token. We can use this token to find out a few pieces of information about the logged on user. In this case, we want to get the user's email address. You'll see why we want this soon.
+Our first use of the access token will be to get the user's email address from the Outlook API. You'll see why we want this soon.
 
-Add a new function `get_user_email_from_id_token` to `authhelper.py`.
+Create a new file in the `tutorial` directory called `outlookservice.py`. We'll implement all of our Outlook API functions in this file. We'll start by creating a generic method for sending API requests called `make_api_call`.
 
-#### `get_user_email_from_id_token` in the `.\tutorial\authhelper.py` file ####
+#### Contents of `./tutorial/outlookservice.py` ####
 
 ```python
-import base64
+import requests
+import uuid
 import json
 
-def get_user_email_from_id_token(id_token):
-  # JWT is in three parts, header, token, and signature
-  # separated by '.'
-  token_parts = id_token.split('.')
-  encoded_token = token_parts[1]
+outlook_api_endpoint = 'https://outlook.office.com/api/v2.0{0}'
+
+# Generic API Sending
+def make_api_call(method, url, token, user_email, payload = None, parameters = None):
+  # Send these headers with all API calls
+  headers = { 'User-Agent' : 'python_tutorial/1.0',
+              'Authorization' : 'Bearer {0}'.format(token),
+              'Accept' : 'application/json',
+              'X-AnchorMailbox' : user_email }
+              
+  # Use these headers to instrument calls. Makes it easier
+  # to correlate requests and responses in case of problems
+  # and is a recommended best practice.
+  request_id = str(uuid.uuid4())
+  instrumentation = { 'client-request-id' : request_id,
+                      'return-client-request-id' : 'true' }
+                      
+  headers.update(instrumentation)
   
-  # base64 strings should have a length divisible by 4
-  # If this one doesn't, add the '=' padding to fix it
-  leftovers = len(encoded_token) % 4
-  if leftovers == 2:
-      encoded_token += '=='
-  elif leftovers == 3:
-      encoded_token += '='
+  response = None
   
-  # URL-safe base64 decode the token parts
-  decoded = base64.urlsafe_b64decode(encoded_token.encode('utf-8').decode('utf-8')
-  
-  # Load decoded token into a JSON object
-  jwt = json.loads(decoded)
-  
-  return jwt['preferred_username']
+  if (method.upper() == 'GET'):
+      response = requests.get(url, headers = headers, params = parameters)
+  elif (method.upper() == 'DELETE'):
+      response = requests.delete(url, headers = headers, params = parameters)
+  elif (method.upper() == 'PATCH'):
+      headers.update({ 'Content-Type' : 'application/json' })
+      response = requests.patch(url, headers = headers, data = json.dumps(payload), params = parameters)
+  elif (method.upper() == 'POST'):
+      headers.update({ 'Content-Type' : 'application/json' })
+      response = requests.post(url, headers = headers, data = json.dumps(payload), params = parameters)
+      
+  return response
+```
+
+This function uses the `requests` library to send API requests. It sets a standard set of headers on each requests, including client instrumentation.
+
+It also uses the email address we retrieved from the ID token to set the `X-AnchorMailbox` header. By setting this header, we enable the API endpoint to route API calls to the correct backend mailbox server more efficiently. This is why we want to get the user's email address.
+
+Now let's create a function to make us of the `make_api_call` function to get the user. Add a function called `get_me` to `outlookservice.py`.
+
+#### The `get_me` function in `./tutorial/outlookservice.py` ####
+
+```python
+def get_me(access_token):
+  get_me_url = outlook_api_endpoint.format('/Me')
+
+  # Use OData query parameters to control the results
+  #  - Only return the DisplayName and EmailAddress fields
+  query_parameters = {'$select': 'DisplayName,EmailAddress'}
+
+  r = make_api_call('GET', get_me_url, access_token, "", parameters = query_parameters)
+
+  if (r.status_code == requests.codes.ok):
+    return r.json()
+  else:
+    return "{0}: {1}".format(r.status_code, r.text)
 ```
 
 Let's make sure that works. Modify the `gettoken` function in `views.py` to use these helper functions and display the return values.
@@ -321,20 +357,20 @@ Let's make sure that works. Modify the `gettoken` function in `views.py` to use 
 #### Updated `gettoken` function in `.\tutorial\views.py` ####
 
 ```python
-# Update import statement to include new function
-from tutorial.authhelper import get_signin_url, get_token_from_code, get_user_email_from_id_token
+# Add import statement to include new function
+from tutorial.outlookservice import get_me
 
 def gettoken(request):
   auth_code = request.GET['code']
   redirect_uri = request.build_absolute_uri(reverse('tutorial:gettoken'))
   token = get_token_from_code(auth_code, redirect_uri)
   access_token = token['access_token']
-  user_email = get_user_email_from_id_token(token['id_token'])
+  user = get_me(access_token)
 
   # Save the token in the session
   request.session['access_token'] = access_token
-  request.session['user_email'] = user_email
-  return HttpResponse('User Email: {0}, Access token: {1}'.format(user_email, access_token))
+  request.session['user_email'] = user['EmailAddress']
+  return HttpResponse('User Email: {0}, Access token: {1}'.format(user['EmailAddress'], access_token))
 ```
 
 If you save your changes, restart the server, and go through the sign-in process again, you should now see a long string of seemingly nonsensical characters. If everything's gone according to plan, that should be an access token.
@@ -388,71 +424,23 @@ def gettoken(request):
   redirect_uri = request.build_absolute_uri(reverse('tutorial:gettoken'))
   token = get_token_from_code(auth_code, redirect_uri)
   access_token = token['access_token']
-  user_email = get_user_email_from_id_token(token['id_token'])
+  user = get_me(access_token)
 
   # Save the token in the session
   request.session['access_token'] = access_token
-  request.session['user_email'] = user_email
+  request.session['user_email'] = user['EmailAddress']
   return HttpResponseRedirect(reverse('tutorial:mail'))
 ```
 
 For now all this does is read the token back from the cookie and display it. Save your changes, restart the server, and go through the signon process again. You should see the token displayed. Now that we know we have access to the token in the `mail` function, we're ready to call the Mail API.
 
-Create a new file in the `tutorial` directory called `outlookservice.py`. We'll implement all of our Mail API functions in this file. We'll start by creating a generic method for sending API requests called `make_api_call`.
-
-#### Contents of `./tutorial/outlookservice.py` ####
-
-```python
-import requests
-import uuid
-import json
-
-outlook_api_endpoint = 'https://outlook.office.com/api/v2.0{0}'
-
-# Generic API Sending
-def make_api_call(method, url, token, user_email, payload = None, parameters = None):
-  # Send these headers with all API calls
-  headers = { 'User-Agent' : 'python_tutorial/1.0',
-              'Authorization' : 'Bearer {0}'.format(token),
-              'Accept' : 'application/json',
-              'X-AnchorMailbox' : user_email }
-              
-  # Use these headers to instrument calls. Makes it easier
-  # to correlate requests and responses in case of problems
-  # and is a recommended best practice.
-  request_id = str(uuid.uuid4())
-  instrumentation = { 'client-request-id' : request_id,
-                      'return-client-request-id' : 'true' }
-                      
-  headers.update(instrumentation)
-  
-  response = None
-  
-  if (method.upper() == 'GET'):
-      response = requests.get(url, headers = headers, params = parameters)
-  elif (method.upper() == 'DELETE'):
-      response = requests.delete(url, headers = headers, params = parameters)
-  elif (method.upper() == 'PATCH'):
-      headers.update({ 'Content-Type' : 'application/json' })
-      response = requests.patch(url, headers = headers, data = json.dumps(payload), params = parameters)
-  elif (method.upper() == 'POST'):
-      headers.update({ 'Content-Type' : 'application/json' })
-      response = requests.post(url, headers = headers, data = json.dumps(payload), params = parameters)
-      
-  return response
-```
-
-This function uses the `requests` library to send API requests. It sets a standard set of headers on each requests, including client instrumentation.
-
-It also uses the email address we retrieved from the ID token to set the `X-AnchorMailbox` header. By setting this header, we enable the API endpoint to route API calls to the correct backend mailbox server more efficiently.
-
-Now let's add a function that will use this function to implement a request to retrieve messages from the inbox. Create a new function in `outlookservice.py` called `get_my_messages`.
+Let's add a function that will use the `make_api_call` function to implement a request to retrieve messages from the inbox. Create a new function in `outlookservice.py` called `get_my_messages`.
 
 #### The `get_my_messages` function in `./tutorial/outlookservice.py` ####
 
 ```python
 def get_my_messages(access_token, user_email):
-  get_messages_url = outlook_api_endpoint.format('/Me/Messages')
+  get_messages_url = outlook_api_endpoint.format('/Me/MailFolders/Inbox/Messages')
   
   # Use OData query parameters to control the results
   #  - Only first 10 results returned
@@ -473,7 +461,7 @@ def get_my_messages(access_token, user_email):
 Now we can modify the `mail` function to call this function and retrieve email. First, import the `get_my_messages` function by adding the following line to the top of `views.py`.
 
 ```python
-from tutorial.outlookservice import get_my_messages
+from tutorial.outlookservice import get_me, get_my_messages
 ```
 
 Then update the `mail` function to call the new function.

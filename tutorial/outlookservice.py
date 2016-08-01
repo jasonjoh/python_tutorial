@@ -52,7 +52,7 @@ def get_me(access_token):
     return "{0}: {1}".format(r.status_code, r.text)
 
 def get_my_messages(access_token, user_email):
-  get_messages_url = outlook_api_endpoint.format('/Me/Messages')
+  get_messages_url = outlook_api_endpoint.format('/Me/MailFolders/Inbox/Messages')
   
   # Use OData query parameters to control the results
   #  - Only first 10 results returned
