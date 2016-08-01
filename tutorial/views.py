@@ -2,8 +2,8 @@
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 from django.core.urlresolvers import reverse
-from tutorial.authhelper import get_signin_url, get_token_from_code, get_user_email_from_id_token
-from tutorial.outlookservice import get_my_messages, get_my_events, get_my_contacts
+from tutorial.authhelper import get_signin_url, get_token_from_code
+from tutorial.outlookservice import get_me, get_my_messages, get_my_events, get_my_contacts
 
 # Create your views here.
 
@@ -17,11 +17,11 @@ def gettoken(request):
   redirect_uri = request.build_absolute_uri(reverse('tutorial:gettoken'))
   token = get_token_from_code(auth_code, redirect_uri)
   access_token = token['access_token']
-  user_email = get_user_email_from_id_token(token['id_token'])
+  user = get_me(access_token)
   
   # Save the token in the session
   request.session['access_token'] = access_token
-  request.session['user_email'] = user_email
+  request.session['user_email'] = user['EmailAddress']
   return HttpResponseRedirect(reverse('tutorial:mail'))
   
 def mail(request):
