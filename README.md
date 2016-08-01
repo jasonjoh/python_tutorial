@@ -6,7 +6,7 @@ The purpose of this guide is to walk through the process of creating a simple Py
 
 This guide assumes:
 
-- That you already have [Python](https://www.python.org/) and [Django](https://www.djangoproject.com/) installed and working on your development machine. This sample was created using Python version 3.4.2 and Django 1.7.1.
+- That you already have [Python](https://www.python.org/) and [Django](https://www.djangoproject.com/) installed and working on your development machine. This sample was created using Python version 3.5.2 and Django 1.10.
 - That you have an Office 365 tenant, with access to an account in that tenant **OR** an Outlook.com developer preview account.
 
 ## Create the app ##
@@ -73,26 +73,33 @@ Create a new file in the `tutorial` directory called `urls.py`. Add the followin
 ### Contents of the `.\tutorial\urls.py` file ###
 
 ```python
-from django.conf.urls import patterns, url 
+from django.conf.urls import url 
 from tutorial import views 
 
-urlpatterns = patterns('', 
+urlpatterns = [ 
   # The home view ('/tutorial/') 
   url(r'^$', views.home, name='home'), 
   # Explicit home ('/tutorial/home/') 
   url(r'^home/$', views.home, name='home'), 
-)
+]
 ```
 
-Finally, open the `.\python_tutorial\urls.py` file and add the following lines above the `url(r'^admin/', include(admin.site.urls)),` line.
+Finally, open the `.\python_tutorial\urls.py` file and replace the contents with the following.
 
-### New lines in `.\python_tutorial\urls.py` ###
+### New contents of `.\python_tutorial\urls.py` ###
 
 ```python
-# Invoke the home view in the tutorial app by default
-url(r'^$', 'tutorial.views.home', name='home'),
-# Defer any URLS to the /tutorial directory to the tutorial app
-url(r'^tutorial/', include('tutorial.urls', namespace='tutorial')),
+from django.conf.urls import url, include
+from django.contrib import admin
+from tutorial import views
+
+urlpatterns = [
+    # Invoke the home view in the tutorial app by default
+    url(r'^$', views.home, name='home'),
+    # Defer any URLS to the /tutorial directory to the tutorial app
+    url(r'^tutorial/', include('tutorial.urls', namespace='tutorial')),
+    url(r'^admin/', include(admin.site.urls)),
+]
 ```
 
 If you're familiar with Django development, this isn't anything new for you. If not, all we've done here is tell Django how to route requests to the tutorial app. Django looks first in the `.\python_tutorial\urls.py` file. The new lines we added there tell it to redirect requests to the root to the `home` view in the tutorial app, and also tells it to send any requests to `/tutorial/*` to the tutorial app.
@@ -212,17 +219,17 @@ The view doesn't do much now, but we'll change that soon. Add this new view to t
 #### Updated contents of the `.\tutorials\urls.py` file ####
 
 ```python
-from django.conf.urls import patterns, url 
+from django.conf.urls import url 
 from tutorial import views 
 
-urlpatterns = patterns('', 
+urlpatterns = [
   # The home view ('/tutorial/') 
   url(r'^$', views.home, name='home'), 
   # Explicit home ('/tutorial/home/') 
   url(r'^home/$', views.home, name='home'), 
   # Redirect to get token ('/tutorial/gettoken/')
   url(r'^gettoken/$', views.gettoken, name='gettoken'),
-)
+]
 ```
 
 Save your changes and browse to http://localhost:8000. If you hover over the link, it should look like:
@@ -356,10 +363,10 @@ Update the `urls.py` file to include an entry for the new view.
 #### Updated contents of `.\tutorial\urls.py`####
 
 ```python
-from django.conf.urls import patterns, url 
+from django.conf.urls import url
 from tutorial import views 
 
-urlpatterns = patterns('', 
+urlpatterns = [ 
   # The home view ('/tutorial/') 
   url(r'^$', views.home, name='home'), 
   # Explicit home ('/tutorial/home/') 
@@ -368,7 +375,7 @@ urlpatterns = patterns('',
   url(r'^gettoken/$', views.gettoken, name='gettoken'),
   # Mail view ('/tutorial/mail/')
   url(r'^mail/$', views.mail, name='mail'),
-)
+]
 ```
 
 Update the `gettoken` function to redirect to the `mail` view after saving the token in the session.

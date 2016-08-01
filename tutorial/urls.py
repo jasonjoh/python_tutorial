@@ -1,8 +1,8 @@
 # Copyright (c) Microsoft. All rights reserved. Licensed under the MIT license. See full license at the bottom of this file.
-from django.conf.urls import patterns, url 
+from django.conf.urls import url
 from tutorial import views 
 
-urlpatterns = patterns('', 
+urlpatterns = [ 
   # The home view ('/tutorial/') 
   url(r'^$', views.home, name='home'), 
   # Explicit home ('/tutorial/home/') 
@@ -15,7 +15,7 @@ urlpatterns = patterns('',
   url(r'^events/$', views.events, name='events'),
   # Contacts view ('/tutorial/contacts/')
   url(r'^contacts/$', views.contacts, name='contacts'),
-) 
+]
 
 # MIT License: 
  
