@@ -36,9 +36,23 @@ def make_api_call(method, url, token, user_email, payload = None, parameters = N
         response = requests.post(url, headers = headers, data = json.dumps(payload), params = parameters)
         
     return response
-    
+
+def get_me(access_token):
+  get_me_url = outlook_api_endpoint.format('/Me')
+
+  # Use OData query parameters to control the results
+  #  - Only return the DisplayName and EmailAddress fields
+  query_parameters = {'$select': 'DisplayName,EmailAddress'}
+
+  r = make_api_call('GET', get_me_url, access_token, "", parameters = query_parameters)
+
+  if (r.status_code == requests.codes.ok):
+    return r.json()
+  else:
+    return "{0}: {1}".format(r.status_code, r.text)
+
 def get_my_messages(access_token, user_email):
-  get_messages_url = outlook_api_endpoint.format('/Me/Messages')
+  get_messages_url = outlook_api_endpoint.format('/Me/MailFolders/Inbox/Messages')
   
   # Use OData query parameters to control the results
   #  - Only first 10 results returned
