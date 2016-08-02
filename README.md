@@ -138,6 +138,9 @@ Now the library is installed and ready to use. Create a new file in the `tutoria
 
 ```python
 from urllib.parse import quote, urlencode
+import base64
+import json
+import time
 
 # Client ID and secret
 client_id = 'YOUR APP ID HERE'
@@ -375,7 +378,110 @@ def gettoken(request):
 
 If you save your changes, restart the server, and go through the sign-in process again, you should now see a long string of seemingly nonsensical characters. If everything's gone according to plan, that should be an access token.
 
-Now we're ready to call the Mail API.
+### Refreshing the access token
+
+Access tokens returned from Azure are valid for an hour. If you use the token after it has expired, the API calls will return 401 errors. You could ask the user to sign in again, but the better option is to refresh the token silently.
+
+In order to do that, the app must request the `offline_access` scope. Add this scope to the `scopes` array in `authhelper.py`:
+
+```python
+# The scopes required by the app
+scopes = [ 'openid',
+           'offline_access',
+           'https://outlook.office.com/mail.read' ]
+```
+
+This will cause the token response from Azure to include a refresh token. Let's update `gettoken` in `views.py` to save the refresh token and the expiration time in the session.
+
+#### Updated `gettoken` function in `.\tutorial\views.py` ####
+
+```python
+# Add import statement to include new function
+from tutorial.outlookservice import get_me
+
+def gettoken(request):
+  auth_code = request.GET['code']
+  redirect_uri = request.build_absolute_uri(reverse('tutorial:gettoken'))
+  token = get_token_from_code(auth_code, redirect_uri)
+  access_token = token['access_token']
+  user = get_me(access_token)
+  refresh_token = token['refresh_token']
+  expires_in = token['expires_in']
+
+  # expires_in is in seconds
+  # Get current timestamp (seconds since Unix Epoch) and
+  # add expires_in to get expiration time
+  # Subtract 5 minutes to allow for clock differences
+  expiration = int(time.time()) + expires_in - 300
+  
+  # Save the token in the session
+  request.session['access_token'] = access_token
+  request.session['refresh_token'] = refresh_token
+  request.session['token_expires'] = expiration
+  request.session['user_email'] = user['EmailAddress']
+  return HttpResponse('User Email: {0}, Access token: {1}'.format(user['EmailAddress'], access_token))
+```
+
+Now let's create a function to refresh the access token. Add the following function to `authhelper.py`.
+
+#### The `get_token_from_refresh_token` function in `./tutorial/authhelper.py` ####
+
+```python
+def get_token_from_refresh_token(refresh_token, redirect_uri):
+  # Build the post form for the token request
+  post_data = { 'grant_type': 'refresh_token',
+                'refresh_token': refresh_token,
+                'redirect_uri': redirect_uri,
+                'scope': ' '.join(str(i) for i in scopes),
+                'client_id': client_id,
+                'client_secret': client_secret
+              }
+              
+  r = requests.post(token_url, data = post_data)
+  
+  try:
+    return r.json()
+  except:
+    return 'Error retrieving token: {0} - {1}'.format(r.status_code, r.text)
+```
+
+Finally let's create a helper function to retrieve the access token. The function will check the expiration time, and if the token is expired, will refresh it. Otherwise it will just return the access token from the session. Add the following function to `authhelper.py`.
+
+#### The `get_access_token` function in `./tutorial/authhelper.py` ####
+
+```python
+def get_access_token(request, redirect_uri):
+  current_token = request.session['access_token']
+  expiration = request.session['token_expires']
+  now = int(time.time())
+  if (current_token && now < expiration):
+    // Token still valid
+    return current_token
+  else:
+    // Token expired
+    refresh_token = request.session['refresh_token']
+    new_tokens = get_token_from_refresh_token(refresh_token, redirect_uri)
+
+    // Update session
+    # expires_in is in seconds
+    # Get current timestamp (seconds since Unix Epoch) and
+    # add expires_in to get expiration time
+    # Subtract 5 minutes to allow for clock differences
+    expiration = int(time.time()) + new_tokens['expires_in'] - 300
+    
+    # Save the token in the session
+    request.session['access_token'] = new_tokens['access_token']
+    request.session['refresh_token'] = new_tokens['refresh_token']
+    request.session['token_expires'] = expiration
+
+    return new_tokens['access_token']
+```
+
+Let's import `get_access_token` in `views.py` so we can make use of it.
+
+```python
+from tutorial.authhelper import get_signin_url, get_token_from_code, get_access_token
+```
 
 ## Using the Mail API ##
 
@@ -385,7 +491,7 @@ Now that we can get an access token, we're in a good position to do something wi
 
 ```python
 def mail(request):
-  access_token = request.session['access_token']
+  access_token = get_access_token(request, request.build_absolute_uri(reverse('tutorial:gettoken')))
   user_email = request.session['user_email']
   # If there is no token in the session, redirect to home
   if not access_token:
@@ -470,7 +576,7 @@ Then update the `mail` function to call the new function.
 
 ```python
 def mail(request):
-  access_token = request.session['access_token']
+  access_token = get_access_token(request, request.build_absolute_uri(reverse('tutorial:gettoken')))
   user_email = request.session['user_email']
   # If there is no token in the session, redirect to home
   if not access_token:
@@ -519,7 +625,7 @@ Update the `mail` function in `views.py` to use this new template.
 
 ```python
 def mail(request):
-  access_token = request.session['access_token']
+  access_token = get_access_token(request, request.build_absolute_uri(reverse('tutorial:gettoken')))
   user_email = request.session['user_email']
   # If there is no token in the session, redirect to home
   if not access_token:
