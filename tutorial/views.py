@@ -33,7 +33,7 @@ def gettoken(request):
   request.session['access_token'] = access_token
   request.session['refresh_token'] = refresh_token
   request.session['token_expires'] = expiration
-  request.session['user_email'] = user['EmailAddress']
+  request.session['user_email'] = user['mail']
 
   return HttpResponseRedirect(reverse('tutorial:mail'))
   

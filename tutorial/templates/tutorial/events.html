@@ -11,9 +11,9 @@
   
   {% for event in events %}
     <tr>
-      <td>{{ event.Subject }}</td>
-      <td>{{ event.Start.DateTime }} ({{ event.Start.TimeZone }})</td>
-      <td>{{ event.End.DateTime }} ({{ event.End.TimeZone }})</td>
+      <td>{{ event.subject }}</td>
+      <td>{{ event.start.dateTime }} ({{ event.start.timeZone }})</td>
+      <td>{{ event.end.dateTime }} ({{ event.end.timeZone }})</td>
     </tr>
   {% endfor %}
 </table>

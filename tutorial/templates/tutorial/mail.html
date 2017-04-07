@@ -11,9 +11,9 @@
   
   {% for message in messages %}
     <tr>
-      <td>{{ message.From.EmailAddress.Name }}</td>
-      <td>{{ message.Subject }}</td>
-      <td>{{ message.ReceivedDateTime }}</td>
+      <td>{{ message.from.emailAddress.name }}</td>
+      <td>{{ message.subject }}</td>
+      <td>{{ message.receivedDateTime }}</td>
     </tr>
   {% endfor %}
 </table>

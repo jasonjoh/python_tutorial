@@ -11,9 +11,9 @@
   
   {% for contact in contacts %}
     <tr>
-      <td>{{ contact.GivenName }}</td>
-      <td>{{ contact.Surname }}</td>
-      <td>{{ contact.EmailAddresses.0.Address }}</td>
+      <td>{{ contact.givenName }}</td>
+      <td>{{ contact.surname }}</td>
+      <td>{{ contact.emailAddresses.0.address }}</td>
     </tr>
   {% endfor %}
 </table>
