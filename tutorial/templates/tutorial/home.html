@@ -1,0 +1,11 @@
+<!-- Copyright (c) Microsoft. All rights reserved. Licensed under the MIT license. See LICENSE.txt in the project root for license information. -->
+{% extends "tutorial/layout.html" %}
+{% block content %}
+<div class="jumbotron">
+  <h1>Python Outlook Sample</h1>
+  <p>This example shows how to get an OAuth token from Azure using the <a href="https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-v2-protocols-oauth-code" target="_blank">authorization code grant flow</a> and to use that token to make calls to the Outlook APIs.</p>
+  <p>
+    <a class="btn btn-lg btn-primary" href="{{signin_url}}" role="button" id="connect-button">Connect to Outlook</a>
+  </p>
+</div>
+{% endblock %}

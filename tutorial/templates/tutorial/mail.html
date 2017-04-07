@@ -1,21 +1,20 @@
 <!-- Copyright (c) Microsoft. All rights reserved. Licensed under the MIT license. See LICENSE.txt in the project root for license information. -->
-<html>
-  <body>
-    <h1>Your Email</h1>
-    <table width="100%" border="1">
-      <tr>
-        <th>From</th>
-        <th>Subject</th>
-        <th>Received</th>
-      </tr>
-      
-      {% for message in messages %}
-        <tr>
-          <td>{{ message.From.EmailAddress.Name }}</td>
-          <td>{{ message.Subject }}</td>
-          <td>{{ message.ReceivedDateTime }}</td>
-        </tr>
-      {% endfor %}
-    </table>
-  </body>
-</html>
+{% extends "tutorial/layout.html" %}
+{% block content %}
+<h1>Your Email</h1>
+<table class="table">
+  <tr>
+    <th>From</th>
+    <th>Subject</th>
+    <th>Received</th>
+  </tr>
+  
+  {% for message in messages %}
+    <tr>
+      <td>{{ message.From.EmailAddress.Name }}</td>
+      <td>{{ message.Subject }}</td>
+      <td>{{ message.ReceivedDateTime }}</td>
+    </tr>
+  {% endfor %}
+</table>
+{% endblock %}

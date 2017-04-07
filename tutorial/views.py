@@ -11,7 +11,8 @@ import time
 def home(request):
   redirect_uri = request.build_absolute_uri(reverse('tutorial:gettoken'))
   sign_in_url = get_signin_url(redirect_uri)
-  return HttpResponse('<a href="' + sign_in_url +'">Click here to sign in and view your mail</a>')
+  context = { 'signin_url': sign_in_url }
+  return render(request, 'tutorial/home.html', context)
   
 def gettoken(request):
   auth_code = request.GET['code']
