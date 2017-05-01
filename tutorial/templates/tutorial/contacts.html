@@ -1,20 +1,20 @@
-<html>
-  <body>
-    <h1>Your Contacts</h1>
-    <table width="100%" border="1">
-      <tr>
-        <th>First Name</th>
-        <th>Last Name</th>
-        <th>Email Address</th>
-      </tr>
-      
-      {% for contact in contacts %}
-        <tr>
-          <td>{{ contact.GivenName }}</td>
-          <td>{{ contact.Surname }}</td>
-          <td>{{ contact.EmailAddresses.0.Address }}</td>
-        </tr>
-      {% endfor %}
-    </table>
-  </body>
-</html>
+<!-- Copyright (c) Microsoft. All rights reserved. Licensed under the MIT license. See LICENSE.txt in the project root for license information. -->
+{% extends "tutorial/layout.html" %}
+{% block content %}
+<h1>Your Contacts</h1>
+<table class="table">
+  <tr>
+    <th>First Name</th>
+    <th>Last Name</th>
+    <th>Email Address</th>
+  </tr>
+  
+  {% for contact in contacts %}
+    <tr>
+      <td>{{ contact.givenName }}</td>
+      <td>{{ contact.surname }}</td>
+      <td>{{ contact.emailAddresses.0.address }}</td>
+    </tr>
+  {% endfor %}
+</table>
+{% endblock %}

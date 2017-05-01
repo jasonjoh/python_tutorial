@@ -1,9 +1,9 @@
-# Copyright (c) Microsoft. All rights reserved. Licensed under the MIT license. See full license at the bottom of this file.
+# Copyright (c) Microsoft. All rights reserved. Licensed under the MIT license. See LICENSE.txt in the project root for license information.
 import requests
 import uuid
 import json
 
-outlook_api_endpoint = 'https://outlook.office.com/api/v2.0{0}'
+graph_endpoint = 'https://graph.microsoft.com/v1.0{0}'
 
 # Generic API Sending
 def make_api_call(method, url, token, user_email, payload = None, parameters = None):
@@ -38,11 +38,11 @@ def make_api_call(method, url, token, user_email, payload = None, parameters = N
     return response
 
 def get_me(access_token):
-  get_me_url = outlook_api_endpoint.format('/Me')
+  get_me_url = graph_endpoint.format('/me')
 
   # Use OData query parameters to control the results
-  #  - Only return the DisplayName and EmailAddress fields
-  query_parameters = {'$select': 'DisplayName,EmailAddress'}
+  #  - Only return the displayName and mail fields
+  query_parameters = {'$select': 'displayName,mail'}
 
   r = make_api_call('GET', get_me_url, access_token, "", parameters = query_parameters)
 
@@ -52,15 +52,15 @@ def get_me(access_token):
     return "{0}: {1}".format(r.status_code, r.text)
 
 def get_my_messages(access_token, user_email):
-  get_messages_url = outlook_api_endpoint.format('/Me/MailFolders/Inbox/Messages')
+  get_messages_url = graph_endpoint.format('/me/mailfolders/inbox/messages')
   
   # Use OData query parameters to control the results
   #  - Only first 10 results returned
   #  - Only return the ReceivedDateTime, Subject, and From fields
   #  - Sort the results by the ReceivedDateTime field in descending order
   query_parameters = {'$top': '10',
-                      '$select': 'ReceivedDateTime,Subject,From',
-                      '$orderby': 'ReceivedDateTime DESC'}
+                      '$select': 'receivedDateTime,subject,from',
+                      '$orderby': 'receivedDateTime DESC'}
                       
   r = make_api_call('GET', get_messages_url, access_token, user_email, parameters = query_parameters)
   
@@ -70,15 +70,15 @@ def get_my_messages(access_token, user_email):
     return "{0}: {1}".format(r.status_code, r.text)
     
 def get_my_events(access_token, user_email):
-  get_events_url = outlook_api_endpoint.format('/Me/Events')
+  get_events_url = graph_endpoint.format('/me/events')
   
   # Use OData query parameters to control the results
   #  - Only first 10 results returned
   #  - Only return the Subject, Start, and End fields
   #  - Sort the results by the Start field in ascending order
   query_parameters = {'$top': '10',
-                      '$select': 'Subject,Start,End',
-                      '$orderby': 'Start/DateTime ASC'}
+                      '$select': 'subject,start,end',
+                      '$orderby': 'start/dateTime ASC'}
                       
   r = make_api_call('GET', get_events_url, access_token, user_email, parameters = query_parameters)
   
@@ -88,15 +88,15 @@ def get_my_events(access_token, user_email):
     return "{0}: {1}".format(r.status_code, r.text)
     
 def get_my_contacts(access_token, user_email):
-  get_contacts_url = outlook_api_endpoint.format('/Me/Contacts')
+  get_contacts_url = graph_endpoint.format('/me/contacts')
   
   # Use OData query parameters to control the results
   #  - Only first 10 results returned
   #  - Only return the GivenName, Surname, and EmailAddresses fields
   #  - Sort the results by the GivenName field in ascending order
   query_parameters = {'$top': '10',
-                      '$select': 'GivenName,Surname,EmailAddresses',
-                      '$orderby': 'GivenName ASC'}
+                      '$select': 'givenName,surname,emailAddresses',
+                      '$orderby': 'givenName ASC'}
                       
   r = make_api_call('GET', get_contacts_url, access_token, user_email, parameters = query_parameters)
   
@@ -104,24 +104,3 @@ def get_my_contacts(access_token, user_email):
     return r.json()
   else:
     return "{0}: {1}".format(r.status_code, r.text)
-
-# MIT License: 
- 
-# Permission is hereby granted, free of charge, to any person obtaining 
-# a copy of this software and associated documentation files (the 
-# ""Software""), to deal in the Software without restriction, including 
-# without limitation the rights to use, copy, modify, merge, publish, 
-# distribute, sublicense, and/or sell copies of the Software, and to 
-# permit persons to whom the Software is furnished to do so, subject to 
-# the following conditions: 
- 
-# The above copyright notice and this permission notice shall be 
-# included in all copies or substantial portions of the Software. 
- 
-# THE SOFTWARE IS PROVIDED ""AS IS"", WITHOUT WARRANTY OF ANY KIND, 
-# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF 
-# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE 
-# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
-# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
-# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
