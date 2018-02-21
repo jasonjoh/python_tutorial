@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft. All rights reserved. Licensed under the MIT license. See LICENSE.txt in the project root for license information.
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from tutorial.authhelper import get_signin_url, get_token_from_code, get_access_token
 from tutorial.outlookservice import get_me, get_my_messages, get_my_events, get_my_contacts
 import time

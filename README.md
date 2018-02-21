@@ -33,6 +33,8 @@ Here's what the details of your app registration should look like when you are d
 1. Open the `.\tutorial\authhelper.py` file.
 1. Replace `YOUR APP ID HERE` with the **Application Id** from the registration you just created.
 1. Replace `YOUR APP PASSWORD HERE` with the password you copied earlier.
+1. Install dependencies by entering `pip install -r requirements.txt` at the command prompt.
+1. Run migrations by entering `python manage.py migrate` from the command prompt.
 1. Run the project by entering `python manage.py runserver` from the command prompt.
 
 ## Copyright ##
