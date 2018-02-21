@@ -6,12 +6,11 @@ import json
 graph_endpoint = 'https://graph.microsoft.com/v1.0{0}'
 
 # Generic API Sending
-def make_api_call(method, url, token, user_email, payload = None, parameters = None):
+def make_api_call(method, url, token, payload = None, parameters = None):
     # Send these headers with all API calls
     headers = { 'User-Agent' : 'python_tutorial/1.0',
                 'Authorization' : 'Bearer {0}'.format(token),
-                'Accept' : 'application/json',
-                'X-AnchorMailbox' : user_email }
+                'Accept' : 'application/json' }
                 
     # Use these headers to instrument calls. Makes it easier
     # to correlate requests and responses in case of problems
@@ -51,7 +50,7 @@ def get_me(access_token):
   else:
     return "{0}: {1}".format(r.status_code, r.text)
 
-def get_my_messages(access_token, user_email):
+def get_my_messages(access_token):
   get_messages_url = graph_endpoint.format('/me/mailfolders/inbox/messages')
   
   # Use OData query parameters to control the results
@@ -62,14 +61,14 @@ def get_my_messages(access_token, user_email):
                       '$select': 'receivedDateTime,subject,from',
                       '$orderby': 'receivedDateTime DESC'}
                       
-  r = make_api_call('GET', get_messages_url, access_token, user_email, parameters = query_parameters)
+  r = make_api_call('GET', get_messages_url, access_token, parameters = query_parameters)
   
   if (r.status_code == requests.codes.ok):
     return r.json()
   else:
     return "{0}: {1}".format(r.status_code, r.text)
     
-def get_my_events(access_token, user_email):
+def get_my_events(access_token):
   get_events_url = graph_endpoint.format('/me/events')
   
   # Use OData query parameters to control the results
@@ -80,14 +79,14 @@ def get_my_events(access_token, user_email):
                       '$select': 'subject,start,end',
                       '$orderby': 'start/dateTime ASC'}
                       
-  r = make_api_call('GET', get_events_url, access_token, user_email, parameters = query_parameters)
+  r = make_api_call('GET', get_events_url, access_token, parameters = query_parameters)
   
   if (r.status_code == requests.codes.ok):
     return r.json()
   else:
     return "{0}: {1}".format(r.status_code, r.text)
     
-def get_my_contacts(access_token, user_email):
+def get_my_contacts(access_token):
   get_contacts_url = graph_endpoint.format('/me/contacts')
   
   # Use OData query parameters to control the results
@@ -98,7 +97,7 @@ def get_my_contacts(access_token, user_email):
                       '$select': 'givenName,surname,emailAddresses',
                       '$orderby': 'givenName ASC'}
                       
-  r = make_api_call('GET', get_contacts_url, access_token, user_email, parameters = query_parameters)
+  r = make_api_call('GET', get_contacts_url, access_token, parameters = query_parameters)
   
   if (r.status_code == requests.codes.ok):
     return r.json()

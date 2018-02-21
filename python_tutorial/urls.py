@@ -7,5 +7,5 @@ urlpatterns = [
     url(r'^$', views.home, name='home'),
     # Defer any URLS to the /tutorial directory to the tutorial app
     url(r'^tutorial/', include('tutorial.urls', namespace='tutorial')),
-    url(r'^admin/', include(admin.site.urls)),
+    url(r'^admin/', admin.site.urls),
 ]
